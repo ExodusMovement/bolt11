@@ -2,10 +2,10 @@
 
 const createHash = require('create-hash')
 const bech32 = require('bech32')
-const secp256k1 = require('secp256k1')
+const secp256k1 = require('@exodus/secp256k1')
 const Buffer = require('safe-buffer').Buffer
 const BN = require('bn.js')
-const bitcoinjsAddress = require('bitcoinjs-lib').address
+const bitcoinjsAddress = require('@exodus/bitcoinjs-lib').address
 const cloneDeep = require('lodash/cloneDeep')
 
 // defaults for encode; default timestamp is current time at call
