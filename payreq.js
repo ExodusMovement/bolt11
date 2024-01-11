@@ -63,6 +63,7 @@ const FEATUREBIT_ORDER = [
 ]
 
 const DIVISORS = {
+  __proto__: null,
   m: new BN(1e3, 10),
   u: new BN(1e6, 10),
   n: new BN(1e9, 10),
@@ -78,6 +79,7 @@ const MILLISATS_PER_NANOBTC = new BN(1e2, 10)
 const PICOBTC_PER_MILLISATS = new BN(10, 10)
 
 const TAGCODES = {
+  __proto__: null,
   payment_hash: 1,
   payment_secret: 16,
   description: 13,
@@ -91,7 +93,7 @@ const TAGCODES = {
 }
 
 // reverse the keys and values of TAGCODES and insert into TAGNAMES
-const TAGNAMES = {}
+const TAGNAMES = Object.create(null)
 for (let i = 0, keys = Object.keys(TAGCODES); i < keys.length; i++) {
   const currentName = keys[i]
   const currentCode = TAGCODES[keys[i]].toString()
@@ -99,6 +101,7 @@ for (let i = 0, keys = Object.keys(TAGCODES); i < keys.length; i++) {
 }
 
 const TAGENCODERS = {
+  __proto__: null,
   payment_hash: hexToWord, // 256 bits
   payment_secret: hexToWord, // 256 bits
   description: textToWord, // string variable length
@@ -112,6 +115,7 @@ const TAGENCODERS = {
 }
 
 const TAGPARSERS = {
+  __proto__: null,
   1: (words) => wordsToBuffer(words, true).toString('hex'), // 256 bits
   16: (words) => wordsToBuffer(words, true).toString('hex'), // 256 bits
   13: (words) => wordsToBuffer(words, true).toString('utf8'), // string variable length
@@ -406,7 +410,7 @@ function tagsContainItem (tags, tagName) {
 }
 
 function orderKeys (unorderedObj, forDecode) {
-  const orderedObj = {}
+  const orderedObj = Object.create(null)
   Object.keys(unorderedObj).sort().forEach((key) => {
     orderedObj[key] = unorderedObj[key]
   })
@@ -1011,7 +1015,7 @@ function decode (paymentRequest, network) {
 }
 
 function getTagsObject (tags) {
-  const result = {}
+  const result = Object.create(null)
   tags.forEach(tag => {
     if (tag.tagName === unknownTagName) {
       if (!result.unknownTags) {
