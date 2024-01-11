@@ -732,7 +732,7 @@ function encode (inputData, addDefaults) {
         throw new Error('Routing info pubkey is not a valid pubkey')
       }
       const shortId = hexToBuffer(route.short_channel_id)
-      if (!(shortId instanceof Buffer) || shortId.length !== 8) {
+      if (!(Buffer.isBuffer(shortId)) || shortId.length !== 8) {
         throw new Error('Routing info short channel id must be 8 bytes')
       }
       if (typeof route.fee_base_msat !== 'number' ||
