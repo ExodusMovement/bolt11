@@ -11,16 +11,18 @@
   "scripts": {
     "coverage-report": "nyc report --reporter=lcov --reporter=html",
     "coverage": "nyc --check-coverage --statements 100 --branches 100 --functions 100 --lines 100 npm run unit",
-    "standard": "standard",
-    "test": "npm run standard && npm run coverage",
-    "unit": "tape test/*.js"
+    "lint": "eslint . --ignore-pattern '*.d.ts'",
+    "test": "npm run coverage",
+    "unit": "exodus-test test/*.js"
   },
   "devDependencies": {
-    "nyc": "^15.0.0",
-    "standard": "*",
-    "tap-dot": "*",
-    "tape": "^4.13.2"
+    "@exodus/eslint-config-exodus": "^1.0.1",
+    "@exodus/prettier": "^1.0.0",
+    "@exodus/test": "^1.0.0-rc.57",
+    "eslint": "^8.57.1",
+    "nyc": "^15.0.0"
   },
+  "prettier": "@exodus/prettier",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bitcoinjs/bolt11.git"
