@@ -8,8 +8,7 @@ const BN = require('bn.js')
 const cloneDeep = require('lodash/cloneDeep')
 
 let bitcoinjsAddress
-
-(async () => {
+;(async () => {
   const bitcoinjs = await import('@exodus/bitcoinjs')
   bitcoinjsAddress = bitcoinjs.address
 })()
@@ -20,25 +19,25 @@ const DEFAULTNETWORK = {
   bech32: 'bc',
   pubKeyHash: 0x00,
   scriptHash: 0x05,
-  validWitnessVersions: [0, 1]
+  validWitnessVersions: [0, 1],
 }
 const TESTNETWORK = {
   bech32: 'tb',
   pubKeyHash: 0x6f,
   scriptHash: 0xc4,
-  validWitnessVersions: [0, 1]
+  validWitnessVersions: [0, 1],
 }
 const REGTESTNETWORK = {
   bech32: 'bcrt',
   pubKeyHash: 0x6f,
   scriptHash: 0xc4,
-  validWitnessVersions: [0, 1]
+  validWitnessVersions: [0, 1],
 }
 const SIMNETWORK = {
   bech32: 'sb',
   pubKeyHash: 0x3f,
   scriptHash: 0x7b,
-  validWitnessVersions: [0, 1]
+  validWitnessVersions: [0, 1],
 }
 const DEFAULTEXPIRETIME = 3600
 const DEFAULTCLTVEXPIRY = 9
@@ -47,12 +46,12 @@ const DEFAULTFEATUREBITS = {
   word_length: 4, // last bit set default is 15
   var_onion_optin: {
     required: false,
-    supported: true
+    supported: true,
   },
   payment_secret: {
     required: false,
-    supported: true
-  }
+    supported: true,
+  },
 }
 
 const FEATUREBIT_ORDER = [
@@ -65,7 +64,7 @@ const FEATUREBIT_ORDER = [
   'option_static_remotekey',
   'payment_secret',
   'basic_mpp',
-  'option_support_large_channel'
+  'option_support_large_channel',
 ]
 
 const DIVISORS = {
@@ -73,7 +72,7 @@ const DIVISORS = {
   m: new BN(1e3, 10),
   u: new BN(1e6, 10),
   n: new BN(1e9, 10),
-  p: new BN(1e12, 10)
+  p: new BN(1e12, 10),
 }
 
 const MAX_MILLISATS = new BN('2100000000000000000', 10)
@@ -95,7 +94,7 @@ const TAGCODES = {
   min_final_cltv_expiry: 24, // default: 9
   fallback_address: 9,
   routing_info: 3, // for extra routing info (private etc.)
-  feature_bits: 5
+  feature_bits: 5,
 }
 
 // reverse the keys and values of TAGCODES and insert into TAGNAMES
@@ -117,7 +116,7 @@ const TAGENCODERS = {
   min_final_cltv_expiry: intBEToWords, // default: 9
   fallback_address: fallbackAddressEncoder,
   routing_info: routingInfoEncoder, // for extra routing info (private etc.)
-  feature_bits: featureBitsEncoder
+  feature_bits: featureBitsEncoder,
 }
 
 const TAGPARSERS = {
@@ -131,30 +130,30 @@ const TAGPARSERS = {
   24: wordsToIntBE, // default: 9
   9: fallbackAddressParser,
   3: routingInfoParser, // for extra routing info (private etc.)
-  5: featureBitsParser // keep feature bits as array of 5 bit words
+  5: featureBitsParser, // keep feature bits as array of 5 bit words
 }
 
 const unknownTagName = 'unknownTag'
 
-function unknownEncoder (data) {
+function unknownEncoder(data) {
   data.words = bech32.decode(data.words, Number.MAX_SAFE_INTEGER).words
   return data
 }
 
-function getUnknownParser (tagCode) {
+function getUnknownParser(tagCode) {
   return (words) => ({
     tagCode: parseInt(tagCode),
-    words: bech32.encode('unknown', words, Number.MAX_SAFE_INTEGER)
+    words: bech32.encode('unknown', words, Number.MAX_SAFE_INTEGER),
   })
 }
 
-function wordsToIntBE (words) {
+function wordsToIntBE(words) {
   return words.reverse().reduce((total, item, index) => {
     return total + item * Math.pow(32, index)
   }, 0)
 }
 
-function intBEToWords (intBE, bits) {
+function intBEToWords(intBE, bits) {
   const words = []
   if (bits === undefined) bits = 5
   intBE = Math.floor(intBE)
@@ -163,21 +162,22 @@ function intBEToWords (intBE, bits) {
     words.push(intBE & (Math.pow(2, bits) - 1))
     intBE = Math.floor(intBE / Math.pow(2, bits))
   }
+
   return words.reverse()
 }
 
-function sha256 (data) {
+function sha256(data) {
   return createHash('sha256').update(data).digest()
 }
 
-function convert (data, inBits, outBits) {
+function convert(data, inBits, outBits) {
   let value = 0
   let bits = 0
   const maxV = (1 << outBits) - 1
 
   const result = []
-  for (let i = 0; i < data.length; ++i) {
-    value = (value << inBits) | data[i]
+  for (const datum of data) {
+    value = (value << inBits) | datum
     bits += inBits
 
     while (bits >= outBits) {
@@ -193,40 +193,43 @@ function convert (data, inBits, outBits) {
   return result
 }
 
-function wordsToBuffer (words, trim) {
+function wordsToBuffer(words, trim) {
   let buffer = Buffer.from(convert(words, 5, 8, true))
-  if (trim && words.length * 5 % 8 !== 0) {
+  if (trim && (words.length * 5) % 8 !== 0) {
     buffer = buffer.slice(0, -1)
   }
+
   return buffer
 }
 
-function hexToBuffer (hex) {
-  if (hex !== undefined &&
-      (typeof hex === 'string' || hex instanceof String) &&
-      hex.match(/^([a-zA-Z0-9]{2})*$/)) {
+function hexToBuffer(hex) {
+  if (
+    hex !== undefined &&
+    (typeof hex === 'string' || hex instanceof String) &&
+    /^([\dA-Za-z]{2})*$/.test(hex)
+  ) {
     return Buffer.from(hex, 'hex')
   }
+
   return hex
 }
 
-function textToBuffer (text) {
+function textToBuffer(text) {
   return Buffer.from(text, 'utf8')
 }
 
-function hexToWord (hex) {
+function hexToWord(hex) {
   const buffer = hexToBuffer(hex)
   return bech32.toWords(buffer)
 }
 
-function textToWord (text) {
+function textToWord(text) {
   const buffer = textToBuffer(text)
-  const words = bech32.toWords(buffer)
-  return words
+  return bech32.toWords(buffer)
 }
 
 // see encoder for details
-function fallbackAddressParser (words, network) {
+function fallbackAddressParser(words, network) {
   const version = words[0]
   words = words.slice(1)
 
@@ -250,7 +253,7 @@ function fallbackAddressParser (words, network) {
   return {
     code: version,
     address,
-    addressHash: addressHash.toString('hex')
+    addressHash: addressHash.toString('hex'),
   }
 }
 
@@ -258,13 +261,13 @@ function fallbackAddressParser (words, network) {
 // anything besides code 17 or 18 should be bech32 or bech32m encoded address.
 // 1 word for the code, and right pad with 0 if necessary for the addressHash
 // (address parsing for encode is done in the encode function)
-function fallbackAddressEncoder (data, network) {
+function fallbackAddressEncoder(data, network) {
   return [data.code].concat(hexToWord(data.addressHash))
 }
 
 // first convert from words to buffer, trimming padding where necessary
 // parse in 51 byte chunks. See encoder for details.
-function routingInfoParser (words) {
+function routingInfoParser(words) {
   const routes = []
   let pubkey, shortChannelId, feeBaseMSats, feeProportionalMillionths, cltvExpiryDelta
   let routesBuffer = wordsToBuffer(words, true)
@@ -282,32 +285,34 @@ function routingInfoParser (words) {
       short_channel_id: shortChannelId,
       fee_base_msat: feeBaseMSats,
       fee_proportional_millionths: feeProportionalMillionths,
-      cltv_expiry_delta: cltvExpiryDelta
+      cltv_expiry_delta: cltvExpiryDelta,
     })
   }
+
   return routes
 }
 
-function featureBitsParser (words) {
-  const bools = words.slice().reverse().map(word =>
-    [
+function featureBitsParser(words) {
+  const bools = [...words]
+    .reverse()
+    .flatMap((word) => [
       !!(word & 0b1),
       !!(word & 0b10),
       !!(word & 0b100),
       !!(word & 0b1000),
-      !!(word & 0b10000)
-    ]
-  ).reduce((finalArr, itemArr) => finalArr.concat(itemArr), [])
+      !!(word & 0b1_0000),
+    ])
   while (bools.length < FEATUREBIT_ORDER.length * 2) {
     bools.push(false)
   }
+
   const featureBits = {
-    word_length: words.length
+    word_length: words.length,
   }
   FEATUREBIT_ORDER.forEach((featureName, index) => {
     featureBits[featureName] = {
       required: bools[index * 2],
-      supported: bools[index * 2 + 1]
+      supported: bools[index * 2 + 1],
     }
   })
   if (bools.length > FEATUREBIT_ORDER.length * 2) {
@@ -316,37 +321,39 @@ function featureBitsParser (words) {
       start_bit: FEATUREBIT_ORDER.length * 2,
       bits: extraBits,
       has_required: extraBits.reduce(
-        (result, bit, index) =>
-          index % 2 !== 0
-            ? result || false
-            : result || bit,
+        (result, bit, index) => (index % 2 === 0 ? result || bit : result || false),
         false
-      )
+      ),
     }
   } else {
     featureBits.extra_bits = {
       start_bit: FEATUREBIT_ORDER.length * 2,
       bits: [],
-      has_required: false
+      has_required: false,
     }
   }
+
   return featureBits
 }
 
-function featureBitsEncoder (featureBits) {
+function featureBitsEncoder(featureBits) {
   let wordsLength = featureBits.word_length
   let bools = []
-  FEATUREBIT_ORDER.forEach(featureName => {
-    bools.push(!!(featureBits[featureName] || {}).required)
-    bools.push(!!(featureBits[featureName] || {}).supported)
+  FEATUREBIT_ORDER.forEach((featureName) => {
+    bools.push(
+      !!(featureBits[featureName] || {}).required,
+      !!(featureBits[featureName] || {}).supported
+    )
   })
   // Make sure that only minimal number of bits is encoded
   while (bools[bools.length - 1] === false) {
     bools.pop()
   }
+
   while (bools.length % 5 !== 0) {
     bools.push(false)
   }
+
   if (
     featureBits.extra_bits &&
     Array.isArray(featureBits.extra_bits.bits) &&
@@ -355,20 +362,27 @@ function featureBitsEncoder (featureBits) {
     while (bools.length < featureBits.extra_bits.start_bit) {
       bools.push(false)
     }
+
     bools = bools.concat(featureBits.extra_bits.bits)
   }
+
   if (wordsLength !== undefined && bools.length / 5 > wordsLength) {
     throw new Error('word_length is too small to contain all featureBits')
   } else if (wordsLength === undefined) {
     wordsLength = Math.ceil(bools.length / 5)
   }
-  return new Array(wordsLength).fill(0).map((_, index) =>
-    bools[index * 5 + 4] << 4 |
-    bools[index * 5 + 3] << 3 |
-    bools[index * 5 + 2] << 2 |
-    bools[index * 5 + 1] << 1 |
-    bools[index * 5] << 0
-  ).reverse()
+
+  return new Array(wordsLength)
+    .fill(0)
+    .map(
+      (_, index) =>
+        (bools[index * 5 + 4] << 4) |
+        (bools[index * 5 + 3] << 3) |
+        (bools[index * 5 + 2] << 2) |
+        (bools[index * 5 + 1] << 1) |
+        Math.trunc(bools[index * 5])
+    )
+    .reverse()
 }
 
 // routing info is encoded first as a large buffer
@@ -377,24 +391,33 @@ function featureBitsEncoder (featureBits) {
 // 4 byte fee proportional millionths and a 2 byte left padded CLTV expiry delta.
 // after encoding these 51 byte chunks and concatenating them
 // convert to words right padding 0 bits.
-function routingInfoEncoder (datas) {
+function routingInfoEncoder(datas) {
   let buffer = Buffer.from([])
-  datas.forEach(data => {
+  datas.forEach((data) => {
     buffer = Buffer.concat([buffer, hexToBuffer(data.pubkey)])
     buffer = Buffer.concat([buffer, hexToBuffer(data.short_channel_id)])
-    buffer = Buffer.concat([buffer, Buffer.from([0, 0, 0].concat(intBEToWords(data.fee_base_msat, 8)).slice(-4))])
-    buffer = Buffer.concat([buffer, Buffer.from([0, 0, 0].concat(intBEToWords(data.fee_proportional_millionths, 8)).slice(-4))])
-    buffer = Buffer.concat([buffer, Buffer.from([0].concat(intBEToWords(data.cltv_expiry_delta, 8)).slice(-2))])
+    buffer = Buffer.concat([
+      buffer,
+      Buffer.from([0, 0, 0].concat(intBEToWords(data.fee_base_msat, 8)).slice(-4)),
+    ])
+    buffer = Buffer.concat([
+      buffer,
+      Buffer.from([0, 0, 0].concat(intBEToWords(data.fee_proportional_millionths, 8)).slice(-4)),
+    ])
+    buffer = Buffer.concat([
+      buffer,
+      Buffer.from([0].concat(intBEToWords(data.cltv_expiry_delta, 8)).slice(-2)),
+    ])
   })
   return hexToWord(buffer)
 }
 
 // if text, return the sha256 hash of the text as words.
 // if hex, return the words representation of that data.
-function purposeCommitEncoder (data) {
+function purposeCommitEncoder(data) {
   let buffer
   if (data !== undefined && (typeof data === 'string' || data instanceof String)) {
-    if (data.match(/^([a-zA-Z0-9]{2})*$/)) {
+    if (/^([\dA-Za-z]{2})*$/.test(data)) {
       buffer = Buffer.from(data, 'hex')
     } else {
       buffer = sha256(Buffer.from(data, 'utf8'))
@@ -402,52 +425,58 @@ function purposeCommitEncoder (data) {
   } else {
     throw new Error('purpose or purpose commit must be a string or hex string')
   }
+
   return bech32.toWords(buffer)
 }
 
-function tagsItems (tags, tagName) {
-  const tag = tags.filter(item => item.tagName === tagName)
-  const data = tag.length > 0 ? tag[0].data : null
-  return data
+function tagsItems(tags, tagName) {
+  const tag = tags.filter((item) => item.tagName === tagName)
+  return tag.length > 0 ? tag[0].data : null
 }
 
-function tagsContainItem (tags, tagName) {
+function tagsContainItem(tags, tagName) {
   return tagsItems(tags, tagName) !== null
 }
 
-function orderKeys (unorderedObj, forDecode) {
+function orderKeys(unorderedObj, forDecode) {
   const orderedObj = Object.create(null)
-  Object.keys(unorderedObj).sort().forEach((key) => {
-    orderedObj[key] = unorderedObj[key]
-  })
+  Object.keys(unorderedObj)
+    .sort()
+    .forEach((key) => {
+      orderedObj[key] = unorderedObj[key]
+    })
   if (forDecode === true) {
     const cacheName = '__tagsObject_cache'
     Object.defineProperty(orderedObj, 'tagsObject', {
-      get () {
+      get() {
         if (!this[cacheName]) {
           Object.defineProperty(this, cacheName, {
-            value: getTagsObject(this.tags)
+            value: getTagsObject(this.tags),
           })
         }
+
         return this[cacheName]
-      }
+      },
     })
   }
+
   return orderedObj
 }
 
-function satToHrp (satoshis) {
-  if (!satoshis.toString().match(/^\d+$/)) {
+function satToHrp(satoshis) {
+  if (!/^\d+$/.test(satoshis.toString())) {
     throw new Error('satoshis must be an integer')
   }
+
   const millisatoshisBN = new BN(satoshis, 10)
   return millisatToHrp(millisatoshisBN.mul(new BN(1000, 10)))
 }
 
-function millisatToHrp (millisatoshis) {
-  if (!millisatoshis.toString().match(/^\d+$/)) {
+function millisatToHrp(millisatoshis) {
+  if (!/^\d+$/.test(millisatoshis.toString())) {
     throw new Error('millisatoshis must be an integer')
   }
+
   const millisatoshisBN = new BN(millisatoshis, 10)
   const millisatoshisString = millisatoshisBN.toString(10)
   const millisatoshisLength = millisatoshisString.length
@@ -468,30 +497,32 @@ function millisatToHrp (millisatoshis) {
     divisorString = 'p'
     valueString = millisatoshisBN.mul(PICOBTC_PER_MILLISATS).toString(10)
   }
+
   return valueString + divisorString
 }
 
-function hrpToSat (hrpString, outputString) {
+function hrpToSat(hrpString, outputString) {
   const millisatoshisBN = hrpToMillisat(hrpString, false)
   if (!millisatoshisBN.mod(new BN(1000, 10)).eq(new BN(0, 10))) {
     throw new Error('Amount is outside of valid range')
   }
+
   const result = millisatoshisBN.div(new BN(1000, 10))
   return outputString ? result.toString() : result
 }
 
-function hrpToMillisat (hrpString, outputString) {
+function hrpToMillisat(hrpString, outputString) {
   let divisor, value
-  if (hrpString.slice(-1).match(/^[munp]$/)) {
+  if (/^[mnpu]$/.test(hrpString.slice(-1))) {
     divisor = hrpString.slice(-1)
     value = hrpString.slice(0, -1)
-  } else if (hrpString.slice(-1).match(/^[^munp0-9]$/)) {
+  } else if (/^[^\dmnpu]$/.test(hrpString.slice(-1))) {
     throw new Error('Not a valid multiplier for the amount')
   } else {
     value = hrpString
   }
 
-  if (!value.match(/^\d+$/)) throw new Error('Not a valid human readable amount')
+  if (!/^\d+$/.test(value)) throw new Error('Not a valid human readable amount')
 
   const valueBN = new BN(value, 10)
 
@@ -499,21 +530,26 @@ function hrpToMillisat (hrpString, outputString) {
     ? valueBN.mul(MILLISATS_PER_BTC).div(DIVISORS[divisor])
     : valueBN.mul(MILLISATS_PER_BTC)
 
-  if (((divisor === 'p' && !valueBN.mod(new BN(10, 10)).eq(new BN(0, 10))) ||
-      millisatoshisBN.gt(MAX_MILLISATS))) {
+  if (
+    (divisor === 'p' && !valueBN.mod(new BN(10, 10)).eq(new BN(0, 10))) ||
+    millisatoshisBN.gt(MAX_MILLISATS)
+  ) {
     throw new Error('Amount is outside of valid range')
   }
 
   return outputString ? millisatoshisBN.toString() : millisatoshisBN
 }
 
-function sign (inputPayReqObj, inputPrivateKey) {
+function sign(inputPayReqObj, inputPrivateKey) {
   const payReqObj = cloneDeep(inputPayReqObj)
   const privateKey = hexToBuffer(inputPrivateKey)
   if (payReqObj.complete && payReqObj.paymentRequest) return payReqObj
 
-  if (privateKey === undefined || privateKey.length !== 32 ||
-      !secp256k1.privateKeyVerify(privateKey)) {
+  if (
+    privateKey === undefined ||
+    privateKey.length !== 32 ||
+    !secp256k1.privateKeyVerify(privateKey)
+  ) {
     throw new Error('privateKey must be a 32 byte Buffer and valid private key')
   }
 
@@ -522,10 +558,12 @@ function sign (inputPayReqObj, inputPrivateKey) {
   if (tagsContainItem(payReqObj.tags, TAGNAMES['19'])) {
     tagNodePublicKey = hexToBuffer(tagsItems(payReqObj.tags, TAGNAMES['19']))
   }
+
   // If there is payeeNodeKey attribute, convert to buffer
   if (payReqObj.payeeNodeKey) {
     nodePublicKey = hexToBuffer(payReqObj.payeeNodeKey)
   }
+
   // If they are not equal throw an error
   if (nodePublicKey && tagNodePublicKey && !tagNodePublicKey.equals(nodePublicKey)) {
     throw new Error('payee node key tag and payeeNodeKey attribute must match')
@@ -563,12 +601,16 @@ function sign (inputPayReqObj, inputPrivateKey) {
   payReqObj.recoveryFlag = sigObj.recid
   payReqObj.wordsTemp = bech32.encode('temp', words.concat(sigWords), Number.MAX_SAFE_INTEGER)
   payReqObj.complete = true
-  payReqObj.paymentRequest = bech32.encode(payReqObj.prefix, words.concat(sigWords), Number.MAX_SAFE_INTEGER)
+  payReqObj.paymentRequest = bech32.encode(
+    payReqObj.prefix,
+    words.concat(sigWords),
+    Number.MAX_SAFE_INTEGER
+  )
 
   return orderKeys(payReqObj)
 }
 
-function encode (inputData, addDefaults) {
+function encode(inputData, addDefaults) {
   // we don't want to affect the data being passed in, so we copy the object
   const data = cloneDeep(inputData)
 
@@ -591,13 +633,14 @@ function encode (inputData, addDefaults) {
       data.network.pubKeyHash === undefined ||
       data.network.scriptHash === undefined ||
       !Array.isArray(data.network.validWitnessVersions)
-    ) throw new Error('Invalid network')
+    )
+      throw new Error('Invalid network')
     coinTypeObj = data.network
   }
 
   // use current time as default timestamp (seconds)
   if (data.timestamp === undefined && !canReconstruct) {
-    data.timestamp = Math.floor(new Date().getTime() / 1000)
+    data.timestamp = Math.floor(Date.now() / 1000)
   } else if (data.timestamp === undefined && canReconstruct) {
     throw new Error('Need timestamp for proper payment request reconstruction')
   }
@@ -608,30 +651,34 @@ function encode (inputData, addDefaults) {
   if (!tagsContainItem(data.tags, TAGNAMES['1'])) {
     throw new Error('Lightning Payment Request needs a payment hash')
   }
+
   // If no feature bits when payment secret is found, fail
   if (tagsContainItem(data.tags, TAGNAMES['16'])) {
-    if (!tagsContainItem(data.tags, TAGNAMES['5'])) {
-      if (addDefaults) {
-        data.tags.push({
-          tagName: TAGNAMES['5'],
-          data: DEFAULTFEATUREBITS
-        })
-      } else {
-        throw new Error('Payment request requires feature bits with at least payment secret support flagged if payment secret is included')
-      }
-    } else {
+    if (tagsContainItem(data.tags, TAGNAMES['5'])) {
       const fB = tagsItems(data.tags, TAGNAMES['5'])
       if (!fB.payment_secret || (!fB.payment_secret.supported && !fB.payment_secret.required)) {
-        throw new Error('Payment request requires feature bits with at least payment secret support flagged if payment secret is included')
+        throw new Error(
+          'Payment request requires feature bits with at least payment secret support flagged if payment secret is included'
+        )
       }
+    } else if (addDefaults) {
+      data.tags.push({
+        tagName: TAGNAMES['5'],
+        data: DEFAULTFEATUREBITS,
+      })
+    } else {
+      throw new Error(
+        'Payment request requires feature bits with at least payment secret support flagged if payment secret is included'
+      )
     }
   }
+
   // If no description or purpose commit hash/message, fail
   if (!tagsContainItem(data.tags, TAGNAMES['13']) && !tagsContainItem(data.tags, TAGNAMES['23'])) {
     if (addDefaults) {
       data.tags.push({
         tagName: TAGNAMES['13'],
-        data: DEFAULTDESCRIPTION
+        data: DEFAULTDESCRIPTION,
       })
     } else {
       throw new Error('Payment request requires description or purpose commit hash')
@@ -640,8 +687,10 @@ function encode (inputData, addDefaults) {
 
   // If a description exists, check to make sure the buffer isn't greater than
   // 639 bytes long, since 639 * 8 / 5 = 1023 words (5 bit) when padded
-  if (tagsContainItem(data.tags, TAGNAMES['13']) &&
-      Buffer.from(tagsItems(data.tags, TAGNAMES['13']), 'utf8').length > 639) {
+  if (
+    tagsContainItem(data.tags, TAGNAMES['13']) &&
+    Buffer.from(tagsItems(data.tags, TAGNAMES['13']), 'utf8').length > 639
+  ) {
     throw new Error('Description is too long: Max length 639 bytes')
   }
 
@@ -650,7 +699,7 @@ function encode (inputData, addDefaults) {
   if (!tagsContainItem(data.tags, TAGNAMES['6']) && !canReconstruct && addDefaults) {
     data.tags.push({
       tagName: TAGNAMES['6'],
-      data: DEFAULTEXPIRETIME
+      data: DEFAULTEXPIRETIME,
     })
   }
 
@@ -659,18 +708,20 @@ function encode (inputData, addDefaults) {
   if (!tagsContainItem(data.tags, TAGNAMES['24']) && !canReconstruct && addDefaults) {
     data.tags.push({
       tagName: TAGNAMES['24'],
-      data: DEFAULTCLTVEXPIRY
+      data: DEFAULTCLTVEXPIRY,
     })
   }
 
   let nodePublicKey, tagNodePublicKey
   // If there is a payee_node_key tag convert to buffer
-  if (tagsContainItem(data.tags, TAGNAMES['19'])) tagNodePublicKey = hexToBuffer(tagsItems(data.tags, TAGNAMES['19']))
+  if (tagsContainItem(data.tags, TAGNAMES['19']))
+    tagNodePublicKey = hexToBuffer(tagsItems(data.tags, TAGNAMES['19']))
   // If there is payeeNodeKey attribute, convert to buffer
   if (data.payeeNodeKey) nodePublicKey = hexToBuffer(data.payeeNodeKey)
   if (nodePublicKey && tagNodePublicKey && !tagNodePublicKey.equals(nodePublicKey)) {
     throw new Error('payeeNodeKey and tag payee node key do not match')
   }
+
   // in case we have one or the other, make sure it's in nodePublicKey
   nodePublicKey = nodePublicKey || tagNodePublicKey
   if (nodePublicKey) data.payeeNodeKey = nodePublicKey.toString('hex')
@@ -690,7 +741,7 @@ function encode (inputData, addDefaults) {
         bech32addr = bitcoinjsAddress.fromBech32(address)
         addressHash = bech32addr.data
         code = bech32addr.version
-      } catch (e) {
+      } catch {
         try {
           base58addr = bitcoinjsAddress.fromBase58Check(address)
           if (base58addr.version === coinTypeObj.pubKeyHash) {
@@ -698,20 +749,29 @@ function encode (inputData, addDefaults) {
           } else if (base58addr.version === coinTypeObj.scriptHash) {
             code = 18
           }
+
           addressHash = base58addr.hash
-        } catch (f) {
+        } catch {
           throw new Error('Fallback address type is unknown')
         }
       }
+
       if (bech32addr && !(bech32addr.version in coinTypeObj.validWitnessVersions)) {
         throw new Error('Fallback address witness version is unknown')
       }
+
       if (bech32addr && bech32addr.prefix !== coinTypeObj.bech32) {
         throw new Error('Fallback address network type does not match payment request network type')
       }
-      if (base58addr && base58addr.version !== coinTypeObj.pubKeyHash &&
-          base58addr.version !== coinTypeObj.scriptHash) {
-        throw new Error('Fallback address version (base58) is unknown or the network type is incorrect')
+
+      if (
+        base58addr &&
+        base58addr.version !== coinTypeObj.pubKeyHash &&
+        base58addr.version !== coinTypeObj.scriptHash
+      ) {
+        throw new Error(
+          'Fallback address version (base58) is unknown or the network type is incorrect'
+        )
       }
 
       // FIXME: If addressHash or code is missing, add them to the original Object
@@ -726,31 +786,44 @@ function encode (inputData, addDefaults) {
   // If there is route info tag, check that each route has all 4 necessary info
   if (tagsContainItem(data.tags, TAGNAMES['3'])) {
     const routingInfo = tagsItems(data.tags, TAGNAMES['3'])
-    routingInfo.forEach(route => {
-      if (route.pubkey === undefined ||
+    routingInfo.forEach((route) => {
+      if (
+        route.pubkey === undefined ||
         route.short_channel_id === undefined ||
         route.fee_base_msat === undefined ||
         route.fee_proportional_millionths === undefined ||
-        route.cltv_expiry_delta === undefined) {
+        route.cltv_expiry_delta === undefined
+      ) {
         throw new Error('Routing info is incomplete')
       }
+
       if (!secp256k1.publicKeyVerify(hexToBuffer(route.pubkey))) {
         throw new Error('Routing info pubkey is not a valid pubkey')
       }
+
       const shortId = hexToBuffer(route.short_channel_id)
-      if (!(Buffer.isBuffer(shortId)) || shortId.length !== 8) {
+      if (!Buffer.isBuffer(shortId) || shortId.length !== 8) {
         throw new Error('Routing info short channel id must be 8 bytes')
       }
-      if (typeof route.fee_base_msat !== 'number' ||
-        Math.floor(route.fee_base_msat) !== route.fee_base_msat) {
+
+      if (
+        typeof route.fee_base_msat !== 'number' ||
+        Math.floor(route.fee_base_msat) !== route.fee_base_msat
+      ) {
         throw new Error('Routing info fee base msat is not an integer')
       }
-      if (typeof route.fee_proportional_millionths !== 'number' ||
-        Math.floor(route.fee_proportional_millionths) !== route.fee_proportional_millionths) {
+
+      if (
+        typeof route.fee_proportional_millionths !== 'number' ||
+        Math.floor(route.fee_proportional_millionths) !== route.fee_proportional_millionths
+      ) {
         throw new Error('Routing info fee proportional millionths is not an integer')
       }
-      if (typeof route.cltv_expiry_delta !== 'number' ||
-        Math.floor(route.cltv_expiry_delta) !== route.cltv_expiry_delta) {
+
+      if (
+        typeof route.cltv_expiry_delta !== 'number' ||
+        Math.floor(route.cltv_expiry_delta) !== route.cltv_expiry_delta
+      ) {
         throw new Error('Routing info cltv expiry delta is not an integer')
       }
     })
@@ -788,26 +861,27 @@ function encode (inputData, addDefaults) {
 
   const tags = data.tags
   let tagWords = []
-  tags.forEach(tag => {
+  tags.forEach((tag) => {
     const possibleTagNames = Object.keys(TAGENCODERS)
     if (canReconstruct) possibleTagNames.push(unknownTagName)
     // check if the tagName exists in the encoders object, if not throw Error.
-    if (possibleTagNames.indexOf(tag.tagName) === -1) {
+    if (!possibleTagNames.includes(tag.tagName)) {
       throw new Error('Unknown tag key: ' + tag.tagName)
     }
 
     let words
-    if (tag.tagName !== unknownTagName) {
+    if (tag.tagName === unknownTagName) {
+      const result = unknownEncoder(tag.data)
+      tagWords.push(result.tagCode)
+      words = result.words
+    } else {
       // each tag starts with 1 word code for the tag
       tagWords.push(TAGCODES[tag.tagName])
 
       const encoder = TAGENCODERS[tag.tagName]
       words = encoder(tag.data)
-    } else {
-      const result = unknownEncoder(tag.data)
-      tagWords.push(result.tagCode)
-      words = result.words
     }
+
     // after the tag code, 2 words are used to store the length (in 5 bit words) of the tag data
     // (also left padded, most integers are left padded while buffers are right padded)
     tagWords = tagWords.concat([0].concat(intBEToWords(words.length)).slice(-2))
@@ -840,13 +914,25 @@ function encode (inputData, addDefaults) {
     Earlier we check if the private key matches the payee node key IF they
     gave one. */
     if (nodePublicKey) {
-      const recoveredPubkey = Buffer.from(secp256k1.ecdsaRecover(Buffer.from(data.signature, 'hex'), data.recoveryFlag, payReqHash, true))
+      const recoveredPubkey = Buffer.from(
+        secp256k1.ecdsaRecover(
+          Buffer.from(data.signature, 'hex'),
+          data.recoveryFlag,
+          payReqHash,
+          true
+        )
+      )
       if (nodePublicKey && !nodePublicKey.equals(recoveredPubkey)) {
-        throw new Error('Signature, message, and recoveryID did not produce the same pubkey as payeeNodeKey')
+        throw new Error(
+          'Signature, message, and recoveryID did not produce the same pubkey as payeeNodeKey'
+        )
       }
+
       sigWords = hexToWord(data.signature + '0' + data.recoveryFlag)
     } else {
-      throw new Error('Reconstruction with signature and recoveryID requires payeeNodeKey to verify correctness of input data.')
+      throw new Error(
+        'Reconstruction with signature and recoveryID requires payeeNodeKey to verify correctness of input data.'
+      )
     }
   }
 
@@ -856,9 +942,12 @@ function encode (inputData, addDefaults) {
     data.timeExpireDate = data.timestamp + tagsItems(data.tags, TAGNAMES['6'])
     data.timeExpireDateString = new Date(data.timeExpireDate * 1000).toISOString()
   }
+
   data.timestampString = new Date(data.timestamp * 1000).toISOString()
   data.complete = !!sigWords
-  data.paymentRequest = data.complete ? bech32.encode(prefix, dataWords, Number.MAX_SAFE_INTEGER) : ''
+  data.paymentRequest = data.complete
+    ? bech32.encode(prefix, dataWords, Number.MAX_SAFE_INTEGER)
+    : ''
   data.prefix = prefix
   data.wordsTemp = bech32.encode('temp', dataWords, Number.MAX_SAFE_INTEGER)
 
@@ -869,9 +958,11 @@ function encode (inputData, addDefaults) {
 
 // decode will only have extra comments that aren't covered in encode comments.
 // also if anything is hard to read I'll comment.
-function decode (paymentRequest, network) {
-  if (typeof paymentRequest !== 'string') throw new Error('Lightning Payment Request must be string')
-  if (paymentRequest.slice(0, 2).toLowerCase() !== 'ln') throw new Error('Not a proper lightning payment request')
+function decode(paymentRequest, network) {
+  if (typeof paymentRequest !== 'string')
+    throw new Error('Lightning Payment Request must be string')
+  if (paymentRequest.slice(0, 2).toLowerCase() !== 'ln')
+    throw new Error('Not a proper lightning payment request')
   const decoded = bech32.decode(paymentRequest, Number.MAX_SAFE_INTEGER)
   paymentRequest = paymentRequest.toLowerCase()
   const prefix = decoded.prefix
@@ -898,7 +989,7 @@ function decode (paymentRequest, network) {
   // doesn't have anything, there's a good chance the last letter of the
   // coin type got captured by the third group, so just re-regex without
   // the number.
-  let prefixMatches = prefix.match(/^ln(\S+?)(\d*)([a-zA-Z]?)$/)
+  let prefixMatches = prefix.match(/^ln(\S+?)(\d*)([A-Za-z]?)$/)
   if (prefixMatches && !prefixMatches[2]) prefixMatches = prefix.match(/^ln(\S+)$/)
   if (!prefixMatches) {
     throw new Error('Not a proper lightning payment request')
@@ -906,7 +997,16 @@ function decode (paymentRequest, network) {
 
   const bech32Prefix = prefixMatches[1]
   let coinNetwork
-  if (!network) {
+  if (network) {
+    if (
+      network.bech32 === undefined ||
+      network.pubKeyHash === undefined ||
+      network.scriptHash === undefined ||
+      !Array.isArray(network.validWitnessVersions)
+    )
+      throw new Error('Invalid network')
+    coinNetwork = network
+  } else {
     switch (bech32Prefix) {
       case DEFAULTNETWORK.bech32:
         coinNetwork = DEFAULTNETWORK
@@ -921,15 +1021,8 @@ function decode (paymentRequest, network) {
         coinNetwork = SIMNETWORK
         break
     }
-  } else {
-    if (
-      network.bech32 === undefined ||
-      network.pubKeyHash === undefined ||
-      network.scriptHash === undefined ||
-      !Array.isArray(network.validWitnessVersions)
-    ) throw new Error('Invalid network')
-    coinNetwork = network
   }
+
   if (!coinNetwork || coinNetwork.bech32 !== bech32Prefix) {
     throw new Error('Unknown coin bech32 prefix')
   }
@@ -940,10 +1033,11 @@ function decode (paymentRequest, network) {
     const divisor = prefixMatches[3]
     try {
       satoshis = parseInt(hrpToSat(value + divisor, true))
-    } catch (e) {
+    } catch {
       satoshis = null
       removeSatoshis = true
     }
+
     millisatoshis = hrpToMillisat(value + divisor, true)
   } else {
     satoshis = null
@@ -974,7 +1068,7 @@ function decode (paymentRequest, network) {
     // See: parsers for more comments
     tags.push({
       tagName,
-      data: parser(tagWords, coinNetwork) // only fallback address needs coinNetwork
+      data: parser(tagWords, coinNetwork), // only fallback address needs coinNetwork
     })
   }
 
@@ -986,10 +1080,16 @@ function decode (paymentRequest, network) {
     timeExpireDateString = new Date(timeExpireDate * 1000).toISOString()
   }
 
-  const toSign = Buffer.concat([Buffer.from(prefix, 'utf8'), Buffer.from(convert(wordsNoSig, 5, 8))])
+  const toSign = Buffer.concat([
+    Buffer.from(prefix, 'utf8'),
+    Buffer.from(convert(wordsNoSig, 5, 8)),
+  ])
   const payReqHash = sha256(toSign)
   const sigPubkey = Buffer.from(secp256k1.ecdsaRecover(sigBuffer, recoveryFlag, payReqHash, true))
-  if (tagsContainItem(tags, TAGNAMES['19']) && tagsItems(tags, TAGNAMES['19']) !== sigPubkey.toString('hex')) {
+  if (
+    tagsContainItem(tags, TAGNAMES['19']) &&
+    tagsItems(tags, TAGNAMES['19']) !== sigPubkey.toString('hex')
+  ) {
     throw new Error('Lightning Payment Request signature pubkey does not match payee pubkey')
   }
 
@@ -1006,7 +1106,7 @@ function decode (paymentRequest, network) {
     payeeNodeKey: sigPubkey.toString('hex'),
     signature: sigBuffer.toString('hex'),
     recoveryFlag,
-    tags
+    tags,
   }
 
   if (removeSatoshis) {
@@ -1020,13 +1120,14 @@ function decode (paymentRequest, network) {
   return orderKeys(finalResult, true)
 }
 
-function getTagsObject (tags) {
+function getTagsObject(tags) {
   const result = Object.create(null)
-  tags.forEach(tag => {
+  tags.forEach((tag) => {
     if (tag.tagName === unknownTagName) {
       if (!result.unknownTags) {
         result.unknownTags = []
       }
+
       result.unknownTags.push(tag.data)
     } else {
       result[tag.tagName] = tag.data
@@ -1043,5 +1144,5 @@ module.exports = {
   satToHrp,
   millisatToHrp,
   hrpToSat,
-  hrpToMillisat
+  hrpToMillisat,
 }
