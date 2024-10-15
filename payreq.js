@@ -1,17 +1,12 @@
 'use strict'
 
-const createHash = require('create-hash')
-const bech32 = require('bech32')
-const secp256k1 = require('@exodus/secp256k1')
-const Buffer = require('safe-buffer').Buffer
-const BN = require('bn.js')
-const cloneDeep = require('lodash/cloneDeep')
-
-let bitcoinjsAddress
-;(async () => {
-  const bitcoinjs = await import('@exodus/bitcoinjs')
-  bitcoinjsAddress = bitcoinjs.address
-})()
+import hash from '@exodus/crypto/hash'
+import bech32 from 'bech32'
+import secp256k1 from '@exodus/secp256k1'
+import { Buffer } from 'safe-buffer'
+import BN from 'bn.js'
+import cloneDeep from 'lodash/cloneDeep.js'
+import { address as bitcoinjsAddress } from '@exodus/bitcoinjs'
 
 // defaults for encode; default timestamp is current time at call
 const DEFAULTNETWORK = {
@@ -167,7 +162,7 @@ function intBEToWords(intBE, bits) {
 }
 
 function sha256(data) {
-  return createHash('sha256').update(data).digest()
+  return hash.hashSync('sha256', data, 'buffer')
 }
 
 function convert(data, inBits, outBits) {
