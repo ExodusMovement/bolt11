@@ -90,7 +90,7 @@ fixtures.encode.valid.forEach((f) => {
 
     t.same(signedData.complete, true)
 
-    let tagPayeeNodeKey = signedData.tags.filter(item => item.tagName === 'payee_node_key')
+    let tagPayeeNodeKey = signedData.tags.filter((item) => item.tagName === 'payee_node_key')
     if (tagPayeeNodeKey.length > 0) {
       tagPayeeNodeKey = tagPayeeNodeKey[0]
       t.same(tagPayeeNodeKey, signedData.payeeNodeKey)
@@ -118,7 +118,7 @@ fixtures.decode.valid.forEach((f) => {
 
     t.same(f, decoded)
 
-    let tagPayeeNodeKey = decoded.tags.filter(item => item.tagName === 'payee_node_key')
+    let tagPayeeNodeKey = decoded.tags.filter((item) => item.tagName === 'payee_node_key')
     if (tagPayeeNodeKey.length > 0) {
       tagPayeeNodeKey = tagPayeeNodeKey[0]
       t.same(tagPayeeNodeKey, decoded.payeeNodeKey)
@@ -137,9 +137,9 @@ fixtures.decode.valid.forEach((f) => {
     const keys = Object.keys(decoded.tagsObject)
     t.assert(keys.length > 0)
 
-    keys.forEach(key => {
+    keys.forEach((key) => {
       const data = decoded.tagsObject[key]
-      const tagsData = decoded.tags.filter(item => item.tagName === key)
+      const tagsData = decoded.tags.filter((item) => item.tagName === key)
       t.assert(tagsData.length === 1)
       t.same(data, tagsData[0].data)
     })
@@ -190,13 +190,12 @@ fixtures.decode.invalid.forEach((f) => {
 
 // edge cases
 
-function tagsItems (tags, tagName) {
-  const tag = tags.filter(item => item.tagName === tagName)
-  const data = tag.length > 0 ? tag[0].data : null
-  return data
+function tagsItems(tags, tagName) {
+  const tag = tags.filter((item) => item.tagName === tagName)
+  return tag.length > 0 ? tag[0].data : null
 }
 
-function tagsContainItem (tags, tagName) {
+function tagsContainItem(tags, tagName) {
   return tagsItems(tags, tagName) !== null
 }
 
@@ -213,9 +212,9 @@ tape('encode adds defaults by default', (t) => {
     tags: [
       {
         tagName: 'payment_hash',
-        data: '100102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f'
-      }
-    ]
+        data: '100102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f',
+      },
+    ],
   })
 
   t.ok(encoded.timestamp !== undefined)
@@ -228,30 +227,33 @@ tape('encode adds defaults by default', (t) => {
 })
 
 tape('can decode upper case payment request', (t) => {
-  const decoded = lnpayreq.decode('LNBC2500U1PVJLUEZPP5QQQSYQCYQ5RQWZQFQQQSYQC' +
-                                'YQ5RQWZQFQQQSYQCYQ5RQWZQFQYPQDQ5XYSXXATSYP3' +
-                                'K7ENXV4JSXQZPUAZTRNWNGZN3KDZW5HYDLZF03QDGM2' +
-                                'HDQ27CQV3AGM2AWHZ5SE903VRUATFHQ77W3LS4EVS3C' +
-                                'H9ZW97J25EMUDUPQ63NYW24CG27H2RSPFJ9SRP')
+  const decoded = lnpayreq.decode(
+    'LNBC2500U1PVJLUEZPP5QQQSYQCYQ5RQWZQFQQQSYQC' +
+      'YQ5RQWZQFQQQSYQCYQ5RQWZQFQYPQDQ5XYSXXATSYP3' +
+      'K7ENXV4JSXQZPUAZTRNWNGZN3KDZW5HYDLZF03QDGM2' +
+      'HDQ27CQV3AGM2AWHZ5SE903VRUATFHQ77W3LS4EVS3C' +
+      'H9ZW97J25EMUDUPQ63NYW24CG27H2RSPFJ9SRP'
+  )
   t.ok(decoded.complete === true)
   t.end()
 })
 
 tape('can decode and encode payment request containing unknown tags', (t) => {
-  const paymentRequest = 'lntb30m1pw2f2yspp5s59w4a0kjecw3zyexm7zur8l8n4scw674w' +
-                         '8sftjhwec33km882gsdpa2pshjmt9de6zqun9w96k2um5ypmkjar' +
-                         'gypkh2mr5d9cxzun5ypeh2ursdae8gxqruyqvzddp68gup69uhnz' +
-                         'wfj9cejuvf3xshrwde68qcrswf0d46kcarfwpshyaplw3skw0tdw' +
-                         '4k8g6tsv9e8glzddp68gup69uhnzwfj9cejuvf3xshrwde68qcrs' +
-                         'wf0d46kcarfwpshyaplw3skw0tdw4k8g6tsv9e8gcqpfmy8keu46' +
-                         'zsrgtz8sxdym7yedew6v2jyfswg9zeqetpj2yw3f52ny77c5xsrg' +
-                         '53q9273vvmwhc6p0gucz2av5gtk3esevk0cfhyvzgxgpgyyavt'
+  const paymentRequest =
+    'lntb30m1pw2f2yspp5s59w4a0kjecw3zyexm7zur8l8n4scw674w' +
+    '8sftjhwec33km882gsdpa2pshjmt9de6zqun9w96k2um5ypmkjar' +
+    'gypkh2mr5d9cxzun5ypeh2ursdae8gxqruyqvzddp68gup69uhnz' +
+    'wfj9cejuvf3xshrwde68qcrswf0d46kcarfwpshyaplw3skw0tdw' +
+    '4k8g6tsv9e8glzddp68gup69uhnzwfj9cejuvf3xshrwde68qcrs' +
+    'wf0d46kcarfwpshyaplw3skw0tdw4k8g6tsv9e8gcqpfmy8keu46' +
+    'zsrgtz8sxdym7yedew6v2jyfswg9zeqetpj2yw3f52ny77c5xsrg' +
+    '53q9273vvmwhc6p0gucz2av5gtk3esevk0cfhyvzgxgpgyyavt'
 
   const decoded = lnpayreq.decode(paymentRequest, {
     bech32: 'tb',
     pubKeyHash: 0x6f,
     scriptHash: 0xc4,
-    validWitnessVersions: [0, 1]
+    validWitnessVersions: [0, 1],
   })
   t.ok(decoded.complete === true)
 
@@ -283,13 +285,13 @@ tape('can decode unknown network payment request', (t) => {
     bech32: 'sb',
     pubKeyHash: 0x6f,
     scriptHash: 0xc4,
-    validWitnessVersions: [0, 1]
+    validWitnessVersions: [0, 1],
   }
   const decoded = lnpayreq.decode(
     'lnsb1u1pwslkj8pp52u27w39645j24a0zfxnwytshxserjchdqt8nz8uwv9fp8wasxrhsdq' +
-    'l2pkxz7tfdenjqum0w4hxggrgv4kxj7qcqzpgnvqq8t63nxmgha5945s633fdd3p5x9k889' +
-    'g6p02qsghx4vrgqgr3xzz3hgld8r84ellwgz3teexvqzwlxj7lgkhl8xh2p7dstq0fgsspa' +
-    '5ldq6',
+      'l2pkxz7tfdenjqum0w4hxggrgv4kxj7qcqzpgnvqq8t63nxmgha5945s633fdd3p5x9k889' +
+      'g6p02qsghx4vrgqgr3xzz3hgld8r84ellwgz3teexvqzwlxj7lgkhl8xh2p7dstq0fgsspa' +
+      '5ldq6',
     network
   )
   t.ok(decoded.complete === true)
@@ -304,14 +306,14 @@ tape('can encode and decode small timestamp', (t) => {
       bech32: 'tb',
       pubKeyHash: 111,
       scriptHash: 196,
-      validWitnessVersions: [0, 1]
+      validWitnessVersions: [0, 1],
     },
     tags: [
       {
         tagName: 'payment_hash',
-        data: '0001020304050607080900010203040506070809000102030405060708090102'
-      }
-    ]
+        data: '0001020304050607080900010203040506070809000102030405060708090102',
+      },
+    ],
   })
 
   const signedData = lnpayreq.sign(encoded, fixtures.privateKey)
