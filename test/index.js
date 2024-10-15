@@ -1,8 +1,22 @@
 'use strict'
-const tape = require('tape')
-const fixtures = require('./fixtures')
-const lnpayreq = require('../')
-const BN = require('bn.js')
+import assert from 'node:assert'
+// not sure why eslint doesn't find it
+// eslint-disable-next-line import/no-unresolved
+import tape from '@exodus/test/tape'
+import fixtures from './fixtures.js'
+import * as lnpayreq from '../payreq.js'
+import BN from 'bn.js'
+
+const sameWithNullPrototype = (t, actual, expected) => {
+  assert(Object.getPrototypeOf(actual) === null, 'expected null prototype')
+  assert(
+    Object.getPrototypeOf(expected) === null ||
+      Object.getPrototypeOf(expected) === Object.prototype,
+    'expected null or Object prototype'
+  )
+
+  t.same({ ...actual }, { ...expected })
+}
 
 fixtures.satToHrp.valid.forEach((f) => {
   tape('test valid satoshi to hrp string', (t) => {
@@ -116,7 +130,7 @@ fixtures.decode.valid.forEach((f) => {
 
     if (f.network === undefined) f.network = decoded.network
 
-    t.same(f, decoded)
+    sameWithNullPrototype(t, decoded, f)
 
     let tagPayeeNodeKey = decoded.tags.filter((item) => item.tagName === 'payee_node_key')
     if (tagPayeeNodeKey.length > 0) {
@@ -132,7 +146,7 @@ fixtures.decode.valid.forEach((f) => {
 
     if (f.network === undefined) f.network = decoded.network
 
-    t.same(f, decoded)
+    sameWithNullPrototype(t, decoded, f)
     t.assert(!!decoded.tagsObject)
     const keys = Object.keys(decoded.tagsObject)
     t.assert(keys.length > 0)
@@ -168,11 +182,11 @@ fixtures.decode.valid.forEach((f) => {
 
     const signedData3 = lnpayreq.sign(signedData2, fixtures.privateKey)
 
-    t.same(f, encodedNoPriv)
-    t.same(f, signedData)
-    t.same(f, encodedSignedData)
-    t.same(f, signedData2)
-    t.same(f, signedData3)
+    sameWithNullPrototype(t, encodedNoPriv, f)
+    sameWithNullPrototype(t, signedData, f)
+    sameWithNullPrototype(t, encodedSignedData, f)
+    sameWithNullPrototype(t, signedData2, f)
+    sameWithNullPrototype(t, signedData3, f)
 
     t.end()
   })
