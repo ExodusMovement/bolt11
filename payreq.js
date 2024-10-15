@@ -458,7 +458,7 @@ function orderKeys(unorderedObj, forDecode) {
   return orderedObj
 }
 
-function satToHrp(satoshis) {
+export function satToHrp(satoshis) {
   if (!/^\d+$/.test(satoshis.toString())) {
     throw new Error('satoshis must be an integer')
   }
@@ -467,7 +467,7 @@ function satToHrp(satoshis) {
   return millisatToHrp(millisatoshisBN.mul(new BN(1000, 10)))
 }
 
-function millisatToHrp(millisatoshis) {
+export function millisatToHrp(millisatoshis) {
   if (!/^\d+$/.test(millisatoshis.toString())) {
     throw new Error('millisatoshis must be an integer')
   }
@@ -496,7 +496,7 @@ function millisatToHrp(millisatoshis) {
   return valueString + divisorString
 }
 
-function hrpToSat(hrpString, outputString) {
+export function hrpToSat(hrpString, outputString) {
   const millisatoshisBN = hrpToMillisat(hrpString, false)
   if (!millisatoshisBN.mod(new BN(1000, 10)).eq(new BN(0, 10))) {
     throw new Error('Amount is outside of valid range')
@@ -506,7 +506,7 @@ function hrpToSat(hrpString, outputString) {
   return outputString ? result.toString() : result
 }
 
-function hrpToMillisat(hrpString, outputString) {
+export function hrpToMillisat(hrpString, outputString) {
   let divisor, value
   if (/^[mnpu]$/.test(hrpString.slice(-1))) {
     divisor = hrpString.slice(-1)
@@ -535,7 +535,7 @@ function hrpToMillisat(hrpString, outputString) {
   return outputString ? millisatoshisBN.toString() : millisatoshisBN
 }
 
-function sign(inputPayReqObj, inputPrivateKey) {
+export function sign(inputPayReqObj, inputPrivateKey) {
   const payReqObj = cloneDeep(inputPayReqObj)
   const privateKey = hexToBuffer(inputPrivateKey)
   if (payReqObj.complete && payReqObj.paymentRequest) return payReqObj
@@ -605,7 +605,7 @@ function sign(inputPayReqObj, inputPrivateKey) {
   return orderKeys(payReqObj)
 }
 
-function encode(inputData, addDefaults) {
+export function encode(inputData, addDefaults) {
   // we don't want to affect the data being passed in, so we copy the object
   const data = cloneDeep(inputData)
 
@@ -953,7 +953,7 @@ function encode(inputData, addDefaults) {
 
 // decode will only have extra comments that aren't covered in encode comments.
 // also if anything is hard to read I'll comment.
-function decode(paymentRequest, network) {
+export function decode(paymentRequest, network) {
   if (typeof paymentRequest !== 'string')
     throw new Error('Lightning Payment Request must be string')
   if (paymentRequest.slice(0, 2).toLowerCase() !== 'ln')
@@ -1130,14 +1130,4 @@ function getTagsObject(tags) {
   })
 
   return result
-}
-
-module.exports = {
-  encode,
-  decode,
-  sign,
-  satToHrp,
-  millisatToHrp,
-  hrpToSat,
-  hrpToMillisat,
 }
