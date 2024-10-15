@@ -536,10 +536,10 @@ export function hrpToMillisat(hrpString, outputString) {
 }
 
 export function sign(inputPayReqObj, inputPrivateKey) {
-  const payReqObj = cloneDeep(inputPayReqObj)
-  const privateKey = hexToBuffer(inputPrivateKey)
+  const payReqObj = Object.assign(Object.create(null), cloneDeep(inputPayReqObj))
   if (payReqObj.complete && payReqObj.paymentRequest) return payReqObj
 
+  const privateKey = hexToBuffer(inputPrivateKey)
   if (
     privateKey === undefined ||
     privateKey.length !== 32 ||
